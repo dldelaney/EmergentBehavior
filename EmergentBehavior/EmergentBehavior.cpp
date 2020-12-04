@@ -86,7 +86,8 @@ struct Node {
     short radius = 5;
     bool isActive = false;
     bool showRange = true;
-    char message[30] = "";
+    std::string message = "";
+    std::string state = "";
 };
 
 Node mainNodeGroup[100];
@@ -213,8 +214,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                                 //read the message
 
                                 //TODO - make and parse messages
-
-
+                                std::string msg = mainNodeGroup[j].message;
+                                if (msg == "blink") {
+                                    mainNodeGroup[i].state = "blink";
+                                }
 
                             }
                         }

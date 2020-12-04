@@ -4,6 +4,8 @@
 #include "framework.h"
 #include "EmergentBehavior.h"
 #include "WindowsX.h"
+#include <math.h>
+#include <string>
 
 #define MAX_LOADSTRING 100
 #define UPDATE_WINDOW1 0
@@ -20,9 +22,11 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR    lpCmdLine,
+    _In_ int       nCmdShow)
+
+    
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -39,7 +43,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     {
         return FALSE;
     }
-
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_EMERGENTBEHAVIOR));
 
     MSG msg;
@@ -77,14 +80,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 //
 
 struct Node {
-    unsigned char color[3] = { 255,255,0 }; //it won't accept byte for some reason
-    short point[2] = { 700,200 };
+    unsigned char color[3] = { 255,0,0 }; //it won't accept byte for some reason
+    short point[2] = { -1000,-1000 };
     short range = 100;
     short radius = 5;
     bool isActive = false;
+    bool showRange = true;
+    char message[30] = "";
 };
 
-Node mainNodeGroup[8];
+Node mainNodeGroup[100];
 short nodeCount = 0;
 short mainNodeGroupSize = sizeof(mainNodeGroup) / sizeof(Node);
 //
@@ -151,6 +156,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - post a quit message and return
 //
 //
+float getDist(int x1, int y1, int x2, int y2);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -190,6 +196,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case UPDATE_WINDOW1:
             RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
             SetTimer(hWnd, UPDATE_WINDOW1, 70, (TIMERPROC)NULL);
+            //TODO - apply rules here
+
+
+             //check for messages in nodes that are within the range
+            if (true) {
+                for (int i = 0; i < mainNodeGroupSize; i++) {
+                    for (int j = 0; j < mainNodeGroupSize; j++) {
+                        if (mainNodeGroup[j].isActive) {
+                            float distance = getDist(mainNodeGroup[i].point[0], mainNodeGroup[i].point[1],
+                                mainNodeGroup[j].point[0], mainNodeGroup[j].point[1]);
+                            if (distance < 0.1) {
+                                //ignore it, it's the same point
+                            }
+                            else if (distance < mainNodeGroup[i].range) {
+                                //read the message
+
+                                //TODO - make and parse messages
+
+
+
+                            }
+                        }
+                    }
+                }
+            }
+            
             break;
         }
         break;
@@ -205,7 +237,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             for (int i = 0; i < mainNodeGroupSize; i++) {//loop through all the nodes
                 if (mainNodeGroup[i].isActive) {
                     SelectObject(hdc, GetStockObject(DC_BRUSH));
-                    SetDCBrushColor(hdc, RGB(0, 255, 255));
+                    SetDCBrushColor(hdc, RGB(mainNodeGroup[i].color[0], mainNodeGroup[i].color[1], mainNodeGroup[i].color[2]));
                     //upper left hand coords(x,y), lower right hand coords(x,y)
                     Ellipse(hdc, mainNodeGroup[i].point[0] - mainNodeGroup[i].radius,
                         mainNodeGroup[i].point[1] - mainNodeGroup[i].radius,  //get starting x-y coordinates from object
@@ -213,17 +245,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         mainNodeGroup[i].point[1] + mainNodeGroup[i].radius);//get ending x-y coordinates from starting position and radius
 
                     //show the range of the node
-                    SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                    SetDCPenColor(hdc, RGB(0, 0, 0));
-                    Ellipse(hdc, mainNodeGroup[i].point[0] - mainNodeGroup[i].range,
-                        mainNodeGroup[i].point[1] - mainNodeGroup[i].range,
-                        mainNodeGroup[i].point[0] + mainNodeGroup[i].range,
-                        mainNodeGroup[i].point[1] + mainNodeGroup[i].range);
+                    if (mainNodeGroup[i].showRange) {
+                        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                        SetDCPenColor(hdc, RGB(0,0,0));
+                        Ellipse(hdc, mainNodeGroup[i].point[0] - mainNodeGroup[i].range,
+                            mainNodeGroup[i].point[1] - mainNodeGroup[i].range,
+                            mainNodeGroup[i].point[0] + mainNodeGroup[i].range,
+                            mainNodeGroup[i].point[1] + mainNodeGroup[i].range);
+                    }
                 }
 
             }
-            
-            //TODO - set colors for circles based on rules
+
+          
             
 
             EndPaint(hWnd, &ps);
@@ -256,4 +290,9 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+
+float getDist(int x1, int y1, int x2, int y2) {
+    return sqrt((float)abs(((x2 - x1)* (x2 - x1)) + ((y2 - y1)* (y2 - y1))));
 }

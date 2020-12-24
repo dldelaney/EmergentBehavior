@@ -1,7 +1,7 @@
-﻿Build started 12/23/2020 10:24:01 AM.
+﻿Build started 12/23/2020 11:48:02 AM.
 Logging verbosity is set to: Normal.     1>Project "C:\Users\delan\Desktop\Code\C++\EmergentBehavior\EmergentBehavior\EmergentBehavior.vcxproj" on node 2 (Build target(s)).
      1>InitializeBuildStatus:
-         Creating "Debug\EmergentBehavior.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "Debug\EmergentBehavior.tlog\unsuccessfulbuild".
        ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.26.28801\bin\HostX86\x86\CL.exe /c /ZI /JMC /nologo /W3 /WX- /diagnostics:column /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm- /EHsc /RTC1 /MDd /GS /fp:precise /permissive- /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"Debug\\" /Fd"Debug\vc142.pdb" /Gd /TP /analyze- /FC /errorReport:prompt EmergentBehavior.cpp
          EmergentBehavior.cpp
@@ -20,4 +20,4 @@ Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:01.64
+Time Elapsed 00:00:01.33

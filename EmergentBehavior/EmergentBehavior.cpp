@@ -90,7 +90,7 @@ struct Node {
     short radius = 5;
     bool isActive = false;
     bool showRange = false;
-    char internalColor = -1; //used for color logic
+    short internalColor = 1; //used for color logic
     //colors: R, O, G, B, I, V //took out yellow bc it wouldn't look good, <-- number is respective to that list 
 
     //12-23-20 removed msg and state bc they were useless (not doing RSSI anymore)
@@ -107,9 +107,8 @@ short mainNodeGroupSize = sizeof(mainNodeGroup) / sizeof(Node);
 //FUNCION DEFINITIONS
 //---------------------------------------
 float distToNode(Node node1, Node node2);
-int getMinIndexCharArr(char arr[]);
-char* noColorsIndex(char arr[]);
-//
+
+
 //  FUNCTION: MyRegisterClass()
 //
 //  PURPOSE: Registers the window class.
@@ -236,13 +235,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             //TODO - apply emergent behavior rules here to trigger every cycle
 
             //get number of nodes within radius (as well as color (black color is considered "off")
-            std::string testState = "rainbowChange"; //or gameOfLife or rainbow (no color changing) or flickering
+            char testState = 'R'; //or gameOfLife or rainbow (no color changing) or flickering
+            //R = RainbowChange 
+            //G = gameOfLife (no color changing, just on/off)
+            //F = flickering (randomly, no comms with other nodes, just on/off)
 
             
 
-            if (testState == "rainbowChange") {
+            if (testState == 'R') {
                 //get the number of nodes within range of each node
-                char surroundingColors[6] = {'-', '-', '-', '-', '-', '-' }; //R, O, G, B, I, V respectively
+               
                 /*
                 Get colors of surrounding nodes
                 if a color is not represented, take it
@@ -250,13 +252,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 if the least amount is tied, pick one at random
                 */
                 for (int mainNodeNum = 0; mainNodeNum < mainNodeGroupSize; mainNodeNum++) {
+                    int surroundingColors[6] = { 0,0,0,0,0,0 }; //R, O, G, B, I, V respectively
 
                     for (int otherNode = 0; otherNode < mainNodeGroupSize; otherNode++) {
 
                         //check if the node is within range
                         if (distToNode(mainNodeGroup[mainNodeNum], mainNodeGroup[otherNode]) < mainNodeGroup[mainNodeNum].range) {
                             //check to see if it has a color
-                            if (mainNodeGroup[otherNode].internalColor != -1) {
+                            if (mainNodeGroup[otherNode].internalColor != 0) {
                                 //if it does, add one to the index of the color of the node, effectively making a chart of the most-used colors
                                 surroundingColors[mainNodeGroup[otherNode].internalColor]++;
                             }
@@ -267,26 +270,70 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     
                     //get the min value index of the array
                     //there's probably a better and more elegant way to do this
-                    int minIndex = getMinIndexCharArr(surroundingColors);
-                    if (surroundingColors[minIndex] > -1) {
-                        //if that value is not -1 (-1 is the "no color" number)
+                    int minIndex = 0;
+                    int arraySize = sizeof(surroundingColors) / sizeof(int);
+                    int i = 0;
+                    for (i; i < arraySize; i++) {
+                        if (surroundingColors[i] < surroundingColors[minIndex]) {
+                            minIndex = i;
+                        }
+                    }
+                    if (surroundingColors[minIndex] > 0){
+                        //if that value is not 0 (0 is the "no color" number)
                         //take that color
                         mainNodeGroup[mainNodeNum].internalColor = surroundingColors[minIndex];
+                    } else {
+                        //if the minimum value is 0 (meaning there is at least one color that isn't represented)
+                        //TODO: pick randomly between them
+                        mainNodeGroup[mainNodeNum].internalColor = rand() % 6;
+                        
+                    }//end of else for 0 value
+
+                    //while still inside loop (looping through each node), attach internalColor to externalColor
+                    //R, O, G, B, I, V
+                    //R = 255,0,0
+                    //O = 255,165,0
+                    //G = 0,255,127
+                    //B = 0,0,255
+                    //I = 75,0,130
+                    //V = 238,130,238
+
+                    if (mainNodeGroup[mainNodeNum].internalColor == 1) {//R
+                        mainNodeGroup[mainNodeNum].externalColor[0] = 255;
+                        mainNodeGroup[mainNodeNum].externalColor[1] = 0;
+                        mainNodeGroup[mainNodeNum].externalColor[2] = 0;
                     }
-                    else {
-                        //if it is -1
-                        //count how many -1s are in the array and pick randomly between them
-                        char* noColorsList = noColorsIndex(surroundingColors);
-                        int noColorsListSize = sizeof(noColorsList) / sizeof(char);
-                        //get the randomly selected color (noColorsList is actually a list of colors that do not exist in surroundingColors)
-                        int chosenColor = noColorsList[rand() % noColorsListSize];
-                        mainNodeGroup[mainNodeNum].internalColor = chosenColor;
-
+                    if (mainNodeGroup[mainNodeNum].internalColor == 2) {//O
+                        mainNodeGroup[mainNodeNum].externalColor[0] = 255;
+                        mainNodeGroup[mainNodeNum].externalColor[1] = 165;
+                        mainNodeGroup[mainNodeNum].externalColor[2] = 0;
                     }
+                    if (mainNodeGroup[mainNodeNum].internalColor == 3) {//G
+                        mainNodeGroup[mainNodeNum].externalColor[0] = 0;
+                        mainNodeGroup[mainNodeNum].externalColor[1] = 255;
+                        mainNodeGroup[mainNodeNum].externalColor[2] = 127;
+                    }
+                    if (mainNodeGroup[mainNodeNum].internalColor == 4) {//B
+                        mainNodeGroup[mainNodeNum].externalColor[0] = 0;
+                        mainNodeGroup[mainNodeNum].externalColor[1] = 0;
+                        mainNodeGroup[mainNodeNum].externalColor[2] = 255;
+                    }
+                    if (mainNodeGroup[mainNodeNum].internalColor == 5) {//I
+                        mainNodeGroup[mainNodeNum].externalColor[0] = 75;
+                        mainNodeGroup[mainNodeNum].externalColor[1] = 0;
+                        mainNodeGroup[mainNodeNum].externalColor[2] = 130;
+                    }
+                    if (mainNodeGroup[mainNodeNum].internalColor == 6) {//V
+                        mainNodeGroup[mainNodeNum].externalColor[0] = 238;
+                        mainNodeGroup[mainNodeNum].externalColor[1] = 130;
+                        mainNodeGroup[mainNodeNum].externalColor[2] = 238;
+                    }
+                }//end of main for loop
+                
+                
 
 
-                }
-            }
+            }//end of "rainbowChange" state
 
 
             break;
@@ -298,7 +345,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             HDC hdc = BeginPaint(hWnd, &ps);
             //draw the background rectangle
             SelectObject(hdc, GetStockObject(DC_BRUSH));//paint the background
-            SetDCBrushColor(hdc, RGB(0, 0, 0));
+            SetDCBrushColor(hdc, RGB(0,0,0));
             Rectangle(hdc, 0,0,100000, 100000);
 
             for (int i = 0; i < mainNodeGroupSize; i++) {//loop through all the nodes
@@ -368,29 +415,5 @@ float distToNode(Node node1, Node node2) {
     return sqrt((float)abs(((x2 - x1)* (x2 - x1)) + ((y2 - y1)* (y2 - y1))));
 }
 
-int getMinIndexCharArr(char arr[]) {
-    int minIndex = 0;
-    int arraySize = sizeof(arr) / sizeof(char);
-    int i = 0;
-    for (i; i < arraySize; i++) {
-        if (arr[i] < arr[minIndex]) {
-            minIndex = i;
-        }
-    }
-    return i;
-}
 
-char* noColorsIndex(char arr[]) {
-    int arrIndex = 0;
-    int arraySize = sizeof(arr) / sizeof(char);
-    //count the number of noColors
-    char finalArray[6];
-    for (int i = 0; i < arraySize; i++) {
-        if (arr[i] == -1) {
 
-            arrIndex++;
-
-        }
-    }
-    
-}
